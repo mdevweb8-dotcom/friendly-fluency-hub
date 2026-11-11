@@ -36,5 +36,10 @@ export interface Unit {
 export interface CourseLesson extends Lesson {
   unit: Unit;
 }
+export interface Level {
+  id: string;
+  name: string;
+}
+export const LEVELS: Level[];
 export const UNITS: Unit[];
 export const LESSONS: CourseLesson[];

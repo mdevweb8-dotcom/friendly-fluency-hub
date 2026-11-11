@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { LESSONS, UNITS } from "@/data/lessons";
+import { LESSONS, LEVELS, UNITS } from "@/data/lessons";
 import { EXERCISE_ORDER, buildLessonExercises, gradeExercise } from "@/lib/exercises";
 import {
   DAILY_GOAL,
@@ -16,15 +16,24 @@ import {
   spendEnergy,
 } from "@/lib/progress";
 
-describe("A1 content", () => {
-  it("has exactly 5 units", () => {
-    expect(UNITS.map((u) => u.id)).toEqual(["A1-1", "A1-2", "A1-3", "A1-4", "A1-5"]);
+describe("course content", () => {
+  it("has all 26 units: 13 in A1 then 13 in A2", () => {
+    expect(UNITS).toHaveLength(COURSE_UNITS);
+    expect(UNITS.filter((u) => u.level === "A1")).toHaveLength(13);
+    expect(UNITS.filter((u) => u.level === "A2")).toHaveLength(13);
+    expect(UNITS.slice(0, 5).map((u) => u.id)).toEqual(["A1-1", "A1-2", "A1-3", "A1-4", "A1-5"]);
+    expect(UNITS.map((u) => u.number)).toEqual(Array.from({ length: 26 }, (_, i) => i + 1));
+    expect(LEVELS.map((l) => l.id)).toEqual(["A1", "A2"]);
   });
 
-  it("has 5 lessons per unit and 5 words per lesson", () => {
+  it("has 130 lessons: 5 per unit, 5 words and 3 sentences per lesson", () => {
+    expect(LESSONS).toHaveLength(COURSE_LESSONS);
     for (const unit of UNITS) {
       expect(unit.lessons).toHaveLength(5);
-      for (const lesson of unit.lessons) expect(lesson.words).toHaveLength(5);
+      for (const lesson of unit.lessons) {
+        expect(lesson.words).toHaveLength(5);
+        expect(lesson.sentences).toHaveLength(3);
+      }
     }
   });
 
@@ -35,16 +44,31 @@ describe("A1 content", () => {
         expect(w.pron).toMatch(/[\u0600-\u06FF]/);
         expect(w.ipa).toMatch(/^\/.+\/$/);
       }
+      for (const s of lesson.sentences) {
+        expect(s.pron).toMatch(/[\u0600-\u06FF]/);
+        expect(s.ipa).toMatch(/^\/.+\/$/);
+      }
     }
   });
 
-  it("does not repeat a word across A1", () => {
+  it("does not repeat a word anywhere in the course (650 words)", () => {
     const all = LESSONS.flatMap((l) => l.words.map((w) => w.en.toLowerCase()));
-    expect(new Set(all).size).toBe(125);
+    expect(new Set(all).size).toBe(650);
   });
 
-  it("grammar answers are one of the options", () => {
-    for (const l of LESSONS) expect(l.grammar.options).toContain(l.grammar.answer);
+  it("does not repeat a sentence inside a unit", () => {
+    for (const unit of UNITS) {
+      const all = unit.lessons.flatMap((l) => l.sentences.map((s) => s.en.toLowerCase()));
+      expect(new Set(all).size).toBe(15);
+    }
+  });
+
+  it("grammar has one blank and the answer is one of 3 options", () => {
+    for (const l of LESSONS) {
+      expect(l.grammar.prompt).toContain("___");
+      expect(new Set(l.grammar.options).size).toBe(3);
+      expect(l.grammar.options).toContain(l.grammar.answer);
+    }
   });
 });
 

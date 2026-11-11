@@ -28,3 +28,10 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+
+- All course content (units, lessons, words, sentences, grammar) lives only in `src/data/lessons.js`; UI files import it and never hardcode words. Why: the user adds levels/units there without touching screens.
+- The app UI stays in plain JSX (`src/App.jsx`, `src/components/app/*.jsx`) ported from the user's Bolt project; `src/routes/index.tsx` just renders `App`. Why: the user asked to keep their Bolt code as the base.
+- Rules for XP, energy, streak, daily goal, locking and course percent live in `src/lib/progress.ts`; exercise building/grading in `src/lib/exercises.ts`, both covered by `src/test/course-rules.test.ts`. Why: keeps rules testable and separate from screens.
+- App state is read from localStorage in an effect after mount, never during render. Why: the page is server-rendered and reading storage early breaks hydration.

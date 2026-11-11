@@ -55,7 +55,7 @@ export function recordStudy(s: AppState, xpGain: number, now = new Date()): AppS
 }
 
 /** Starting a lesson uses one energy point for today. */
-export function useEnergy(s: AppState, now = new Date()): AppState {
+export function spendEnergy(s: AppState, now = new Date()): AppState {
   const daily = todayStats(s, now);
   return { ...s, daily: { ...daily, attempts: daily.attempts + 1 } };
 }

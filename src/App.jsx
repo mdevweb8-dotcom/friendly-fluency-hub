@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { UNITS, LESSONS } from './data/lessons';
+import { UNITS, LESSONS, LEVELS } from './data/lessons';
 import { downloadBackup, parseBackup } from './lib/backup';
 import { Button, Card, Icon, ProgressBar, Stat } from './components/app/kit';
 import LessonPlayer from './components/app/LessonPlayer';
@@ -107,64 +107,86 @@ function LessonsScreen({ lessons, openUnitId, onToggleUnit, onStart }) {
   const completedAll = lessons.filter((l) => l.state === 'done').length;
   return (
     <div className="space-y-4">
-      <section className="rounded-[20px] border border-[#E2E8F0] bg-white p-4 shadow-[0_4px_16px_rgba(15,23,42,0.06)]">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-base font-bold text-slate-900">المستوى A1 - أساسي</h2>
-            <p className="mt-1 text-sm text-slate-600">{completedAll} دروس مكتملة</p>
-          </div>
-          <span className="rounded-full bg-[#1A6FA0] px-3 py-1 text-sm font-bold text-white">A1</span>
-        </div>
-        <div className="mt-4">
-          <ProgressBar value={completedAll} max={lessons.length} />
-        </div>
-        <p className="mt-2 text-xs text-slate-500">{courseProgress(completedAll)}% من الدورة</p>
-      </section>
-
-      {UNITS.map((unit) => {
-        const unitLessons = lessons.filter((l) => l.unit.id === unit.id);
-        const done = unitLessons.filter((l) => l.state === 'done').length;
-        const unitLocked = unitLessons[0].state === 'locked';
-        const unitDone = done === unitLessons.length;
-        const open = openUnitId === unit.id;
+      <p className="text-sm text-slate-600">
+        {completedAll}/{lessons.length} دروس مكتملة - {courseProgress(completedAll)}% من الدورة
+      </p>
+      {LEVELS.map((level) => {
+        const levelUnits = UNITS.filter((u) => u.level === level.id);
+        const levelLessons = lessons.filter((l) => l.unit.level === level.id);
+        const levelDone = levelLessons.filter((l) => l.state === 'done').length;
         return (
-          <section key={unit.id} className="overflow-hidden rounded-[20px] border border-[#E2E8F0] bg-white shadow-[0_4px_16px_rgba(15,23,42,0.06)]">
-            <button
-              type="button"
-              onClick={() => onToggleUnit(unit.id)}
-              aria-expanded={open}
-              className="flex w-full items-center gap-3 p-4 text-start transition hover:bg-slate-50"
-            >
-              <div className="min-w-0 flex-1">
-                <h3 className={`text-base font-bold ${unitLocked ? 'text-slate-400' : 'text-slate-900'}`}>
-                  الوحدة {unit.number}: {unit.topic}
-                </h3>
-                <p className="mt-1 text-sm text-slate-500">{done}/{unitLessons.length} دروس</p>
-                <div className="mt-2">
-                  <ProgressBar value={done} max={unitLessons.length} color={unitDone ? 'bg-[#22C55E]' : 'bg-[#1A6FA0]'} />
+          <div key={level.id} className="space-y-4">
+            <section className="rounded-[20px] border border-[#E2E8F0] bg-white p-4 shadow-[0_4px_16px_rgba(15,23,42,0.06)]">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">المستوى {level.id} - {level.name}</h2>
+                  <p className="mt-1 text-sm text-slate-600">
+                    {levelDone}/{levelLessons.length} دروس مكتملة - {levelUnits.length} وحدة
+                  </p>
                 </div>
+                <span className="rounded-full bg-[#1A6FA0] px-3 py-1 text-sm font-bold text-white">{level.id}</span>
               </div>
-              <div
-                className={`grid h-11 w-11 shrink-0 place-items-center rounded-full ${
-                  unitDone ? 'bg-green-50 text-[#22C55E]' : unitLocked ? 'bg-slate-100 text-slate-400' : 'bg-[#E6F1F8] text-[#1A6FA0]'
-                }`}
-              >
-                <Icon name={unitDone ? 'check' : unitLocked ? 'lock' : 'book'} />
+              <div className="mt-4">
+                <ProgressBar value={levelDone} max={levelLessons.length} />
               </div>
-              <Icon name="chevron" className={`h-4 w-4 shrink-0 text-slate-400 transition ${open ? 'rotate-90' : ''}`} />
-            </button>
+            </section>
 
-            {open && (
-              <ul className="space-y-2 border-t border-[#E2E8F0] p-3">
-                {unitLessons.map((lesson) => (
-                  <LessonRow key={lesson.id} lesson={lesson} onStart={onStart} />
-                ))}
-              </ul>
-            )}
-          </section>
+            {levelUnits.map((unit) => (
+              <UnitCard
+                key={unit.id}
+                unit={unit}
+                lessons={lessons.filter((l) => l.unit.id === unit.id)}
+                open={openUnitId === unit.id}
+                onToggle={() => onToggleUnit(unit.id)}
+                onStart={onStart}
+              />
+            ))}
+          </div>
         );
       })}
     </div>
+  );
+}
+
+function UnitCard({ unit, lessons: unitLessons, open, onToggle, onStart }) {
+  const done = unitLessons.filter((l) => l.state === 'done').length;
+  const unitLocked = unitLessons[0].state === 'locked';
+  const unitDone = done === unitLessons.length;
+  return (
+    <section className="overflow-hidden rounded-[20px] border border-[#E2E8F0] bg-white shadow-[0_4px_16px_rgba(15,23,42,0.06)]">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className="flex w-full items-center gap-3 p-4 text-start transition hover:bg-slate-50"
+      >
+        <div className="min-w-0 flex-1">
+          <h3 className={`text-base font-bold ${unitLocked ? 'text-slate-400' : 'text-slate-900'}`}>
+            الوحدة {unit.number}: {unit.topic}
+          </h3>
+          <p className="mt-1 text-sm text-slate-500">{done}/{unitLessons.length} دروس</p>
+          <div className="mt-2">
+            <ProgressBar value={done} max={unitLessons.length} color={unitDone ? 'bg-[#22C55E]' : 'bg-[#1A6FA0]'} />
+          </div>
+        </div>
+        <div
+          className={`grid h-11 w-11 shrink-0 place-items-center rounded-full ${
+            unitDone ? 'bg-green-50 text-[#22C55E]' : unitLocked ? 'bg-slate-100 text-slate-400' : 'bg-[#E6F1F8] text-[#1A6FA0]'
+          }`}
+        >
+          <Icon name={unitDone ? 'check' : unitLocked ? 'lock' : 'book'} />
+        </div>
+        <Icon name="chevron" className={`h-4 w-4 shrink-0 text-slate-400 transition ${open ? 'rotate-90' : ''}`} />
+      </button>
+
+      {open && (
+        <ul className="space-y-2 border-t border-[#E2E8F0] p-3">
+          {unitLessons.map((lesson) => (
+            <LessonRow key={lesson.id} lesson={lesson} onStart={onStart} />
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 
@@ -205,6 +227,7 @@ function AccountInsights({ lessons }) {
   const average = passed.length ? Math.round(passed.reduce((sum, l) => sum + l.score, 0) / passed.length) : 0;
   const next = lessons.find((l) => l.state === 'open');
   const level = passed.length === 0 ? 'مبتدئ' : unitsDone < UNITS.length ? 'في الطريق' : 'مكتمل';
+  const currentLevel = (next ?? lessons[lessons.length - 1]).unit.level;
   return (
     <>
       <Card title="أنت واقف وين" subtitle={next ? `الخطوة التالية: ${lessonTitle(next)}` : 'أنهيت كل الدروس المتاحة'} icon="flame">
@@ -223,7 +246,7 @@ function AccountInsights({ lessons }) {
         </ul>
       </Card>
 
-      <Card title="مستواك كم" subtitle={`المستوى A1 - ${level}`} icon="trophy">
+      <Card title="مستواك كم" subtitle={`المستوى ${currentLevel} - ${level}`} icon="trophy">
         <div className="grid grid-cols-3 gap-3">
           <Stat label="دروس مكتملة" value={passed.length} />
           <Stat label="وحدات مكتملة" value={`${unitsDone}/${UNITS.length}`} />
@@ -289,7 +312,7 @@ function AccountScreen({ profile, lessons, completedCount, percent, onSaveProfil
         )}
       </section>
 
-      <Card title="ملخص الدورة" subtitle="الإنجليزية - أساسي" icon="book">
+      <Card title="ملخص الدورة" subtitle={`الإنجليزية - ${LEVELS.map((l) => l.id).join(" و ")}`} icon="book">
         <dl className="space-y-2 text-sm">
           <div className="flex justify-between"><dt className="text-slate-500">الوحدات</dt><dd className="font-bold">{COURSE_UNITS}</dd></div>
           <div className="flex justify-between"><dt className="text-slate-500">الدروس</dt><dd className="font-bold">{COURSE_LESSONS}</dd></div>
@@ -346,7 +369,10 @@ export default function App() {
   const [toast, setToast] = useState(null);
 
   useEffect(() => {
-    setState(loadState(localStorage.getItem(STORAGE_KEY)));
+    const saved = loadState(localStorage.getItem(STORAGE_KEY));
+    setState(saved);
+    const openIndex = lessonStates(LESSONS.map((l) => l.id), saved.completed).indexOf('open');
+    if (openIndex >= 0) setOpenUnitId(LESSONS[openIndex].unit.id);
     setLoaded(true);
   }, []);
 
